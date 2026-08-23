@@ -80,6 +80,8 @@ final class BathroomEvent {
     /// Whether the stool was diarrhea — only meaningful for poop events.
     var isDiarrhea: Bool
     var notes: String
+    var latitude: Double?
+    var longitude: Double?
 
     init(
         timestamp: Date = Date(),
@@ -87,7 +89,9 @@ final class BathroomEvent {
         peeAmount: PeeAmount? = nil,
         poopConsistency: PoopConsistency? = nil,
         isDiarrhea: Bool = false,
-        notes: String = ""
+        notes: String = "",
+        latitude: Double? = nil,
+        longitude: Double? = nil
     ) {
         self.timestamp = timestamp
         self.kindRaw = kind.rawValue
@@ -95,6 +99,8 @@ final class BathroomEvent {
         self.poopConsistencyRaw = poopConsistency?.rawValue
         self.isDiarrhea = isDiarrhea
         self.notes = notes
+        self.latitude = latitude
+        self.longitude = longitude
     }
 
     var kind: EventKind {

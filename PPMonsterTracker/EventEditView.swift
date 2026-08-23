@@ -7,11 +7,15 @@
 
 import SwiftUI
 import SwiftData
+import MapKit
 
 /// A form for editing an existing bathroom event.
 struct EventEditView: View {
     @Environment(\.dismiss) private var dismiss
+    @Environment(\.modelContext) private var modelContext
     @Bindable var event: BathroomEvent
+
+    @State private var showDeleteConfirmation = false
 
     var body: some View {
         NavigationStack {
@@ -64,6 +68,33 @@ struct EventEditView: View {
                     TextField("Notes", text: $event.notes, axis: .vertical)
                         .lineLimit(3...6)
                 }
+
+                if let lat = event.latitude, let lon = event.longitude {
+                    let coord = CLLocationCoordinate2D(latitude: lat, longitude: lon)
+                    Section("Location") {
+                        Map(position: .constant(.region(MKCoordinateRegion(
+                            center: coord,
+                            span: MKCoordinateSpan(latitudeDelta: 0.005, longitudeDelta: 0.005)
+                        )))) {
+                            Marker("", coordinate: coord)
+                        }
+                        .frame(height: 200)
+                        .clipShape(RoundedRectangle(cornerRadius: 10))
+                        .allowsHitTesting(false)
+                    }
+                }
+
+                Section {
+                    Button(role: .destructive) {
+                        showDeleteConfirmation = true
+                    } label: {
+                        HStack {
+                            Spacer()
+                            Text("Delete Event")
+                            Spacer()
+                        }
+                    }
+                }
             }
             .navigationTitle("Edit Event")
 #if os(iOS)
@@ -81,6 +112,17 @@ struct EventEditView: View {
                     event.poopConsistency = nil
                     event.isDiarrhea = false
                 }
+            }
+            .confirmationDialog(
+                "Delete this event?",
+                isPresented: $showDeleteConfirmation,
+                titleVisibility: .visible
+            ) {
+                Button("Delete", role: .destructive) {
+                    modelContext.delete(event)
+                    dismiss()
+                }
+                Button("Cancel", role: .cancel) {}
             }
         }
     }

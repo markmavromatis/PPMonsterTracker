@@ -7,6 +7,7 @@
 
 import SwiftUI
 import SwiftData
+import CoreLocation
 
 struct ContentView: View {
     @Environment(\.modelContext) private var modelContext
@@ -39,8 +40,8 @@ struct ContentView: View {
             }
 #endif
             .sheet(item: $pendingKind) { kind in
-                LogEventSheet(kind: kind) { peeAmount, poopConsistency, isDiarrhea in
-                    saveEvent(kind: kind, peeAmount: peeAmount, poopConsistency: poopConsistency, isDiarrhea: isDiarrhea)
+                LogEventSheet(kind: kind) { peeAmount, poopConsistency, isDiarrhea, coordinate in
+                    saveEvent(kind: kind, peeAmount: peeAmount, poopConsistency: poopConsistency, isDiarrhea: isDiarrhea, coordinate: coordinate)
                 }
             }
             .sheet(item: $editingEvent) { event in
@@ -110,14 +111,17 @@ struct ContentView: View {
         kind: EventKind,
         peeAmount: PeeAmount?,
         poopConsistency: PoopConsistency?,
-        isDiarrhea: Bool
+        isDiarrhea: Bool,
+        coordinate: CLLocationCoordinate2D?
     ) {
         withAnimation {
             let event = BathroomEvent(
                 kind: kind,
                 peeAmount: peeAmount,
                 poopConsistency: poopConsistency,
-                isDiarrhea: isDiarrhea
+                isDiarrhea: isDiarrhea,
+                latitude: coordinate?.latitude,
+                longitude: coordinate?.longitude
             )
             modelContext.insert(event)
         }

@@ -6,20 +6,21 @@
 //
 
 import SwiftUI
+import CoreLocation
 
 /// The detail sheet shown after tapping a quick-log button.
 /// Lets the user fill in pee amount or poop consistency before saving.
 struct LogEventSheet: View {
     let kind: EventKind
-    /// Called when the user taps Save. Receives the chosen pee amount (pee events)
-    /// and poop details (poop events). Caller is responsible for inserting the event.
-    let onSave: (PeeAmount?, PoopConsistency?, Bool) -> Void
+    /// Called when the user taps Save. Caller is responsible for inserting the event.
+    let onSave: (PeeAmount?, PoopConsistency?, Bool, CLLocationCoordinate2D?) -> Void
 
     @Environment(\.dismiss) private var dismiss
 
     @State private var peeAmount: PeeAmount = .medium
     @State private var poopConsistency: PoopConsistency = .soft
     @State private var isDiarrhea: Bool = false
+    @State private var locationManager = LocationManager()
 
     var body: some View {
         NavigationStack {
@@ -49,6 +50,16 @@ struct LogEventSheet: View {
                         Toggle("Diarrhea", isOn: $isDiarrhea)
                     }
                 }
+
+                Section {
+                    HStack {
+                        Image(systemName: locationStatusImage)
+                            .foregroundStyle(locationStatusColor)
+                        Text(locationStatusText)
+                            .foregroundStyle(.secondary)
+                            .font(.footnote)
+                    }
+                }
             }
             .navigationTitle("Log \(kind.label)")
 #if os(iOS)
@@ -60,16 +71,49 @@ struct LogEventSheet: View {
                 }
                 ToolbarItem(placement: .confirmationAction) {
                     Button("Save") {
+                        let coord = locationManager.coordinate
                         switch kind {
                         case .pee:
-                            onSave(peeAmount, nil, false)
+                            onSave(peeAmount, nil, false, coord)
                         case .poop:
-                            onSave(nil, poopConsistency, isDiarrhea)
+                            onSave(nil, poopConsistency, isDiarrhea, coord)
                         }
                         dismiss()
                     }
                 }
             }
+            .onAppear {
+                locationManager.requestLocation()
+            }
+        }
+    }
+
+    private var locationStatusText: String {
+        switch locationManager.authorizationStatus {
+        case .denied, .restricted:
+            return "Location access denied in Settings"
+        case .notDetermined:
+            return "Requesting location access…"
+        default:
+            return locationManager.coordinate != nil ? "Location captured" : "Acquiring location…"
+        }
+    }
+
+    private var locationStatusImage: String {
+        switch locationManager.authorizationStatus {
+        case .denied, .restricted:
+            return "location.slash.fill"
+        default:
+            return locationManager.coordinate != nil ? "location.fill" : "location"
+        }
+    }
+
+    private var locationStatusColor: Color {
+        switch locationManager.authorizationStatus {
+        case .denied, .restricted:
+            return .red
+        default:
+            return locationManager.coordinate != nil ? .green : .secondary
         }
     }
 }
