@@ -29,7 +29,7 @@ struct ContentView: View {
 
                 historyList
             }
-            .navigationTitle("Puppy Tracker")
+            .navigationTitle("PP Monster Tracker")
 #if os(iOS)
             .toolbar {
                 if !events.isEmpty {
