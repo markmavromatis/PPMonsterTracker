@@ -47,6 +47,9 @@ struct ContentView: View {
             .sheet(item: $editingEvent) { event in
                 EventEditView(event: event)
             }
+            .task {
+                await NotificationManager.requestAuthorization()
+            }
         }
     }
 
@@ -125,6 +128,7 @@ struct ContentView: View {
             )
             modelContext.insert(event)
         }
+        NotificationManager.scheduleWalkReminder()
     }
 
     private func delete(_ offsets: IndexSet, in dayEvents: [BathroomEvent]) {
